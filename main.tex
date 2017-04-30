@@ -54,7 +54,77 @@
 国内外也有不少文献对被动容错控制提出了分类方法。国外文献中，Fekih\cite{6859271}用鲁棒控制的分类方法把被动容错控制分为了数量反馈理论法、$H_\infty$范数优化法\cite{4079591}、LQ控制法\cite{Staroswiecki20072070}、$\mu$同步法和变结构方法。国内文献中，王德军\cite{wangdejun2014}、许德智\cite{xudezhi2013}和高志峰\cite{gaozhifeng2011}都将被动容错控制分为可靠镇定、完整性与联立镇定三类方法。肖冰\cite{xiaobing2014}认为在航天器姿态控制中，被动容错控制可以与主动容错控制的控制器重构部分做为一个方向共同研究。他将航天器姿态容错控制方法，分为基于自适应技术（Adaptive）的方法、基于滑模控制的方法和基于控制分配的方法三类，这一点在Yin. S的论文中\cite{7407616}也得到了有力的支撑。
 
 \subsection{故障检测与诊断}\label{subsec:fdd}
-故障检测（Fault Detection）与故障诊断（Fault Diagnosis）是两个不同的概念。故障检测，一般指系统对是否发生故障进行在线检测；而故障诊断，指的是在检测到故障的基础上，判断故障的类型和严重性。故障检测与诊断是主动容错控制器设计前的必经步骤。其中故障检测现在最为常用的方法，是设计一个残差（Residual）函数。通过残差函数的输出值，结合统计学来判断系统出了哪一类故障。因此，残差函数的设计就显得尤为重要，是故障检测的核心步骤。而残差函数的设计方法，通常可以分为两大类——基于模型的方法和基于数据的方法。故障诊断则更偏向于一种分类方法。
+故障检测（Fault Detection）与故障诊断（Fault Diagnosis）是两个不同的概念。故障检测，一般指系统对是否发生故障进行在线检测；而故障诊断，指的是在检测到故障的基础上，判断故障的类型和严重性。故障检测与诊断是主动容错控制器设计前的必经步骤。目前已经有很多综述文章阐述了故障检测与诊断的研究现状\cite{Venkatasubramanian2003293,6859271,Zhang2008229,7407616,6423903,Marzat2012modelbased,Jiang201260,5282515,Venkatasubramanian2003293,Venkatasubramanian2003A}。其中具体对故障检测的分类也有一些不同。
+
+Inseok Hwang\cite{5282515}在文献中将故障检测分为硬件冗余（Hardware Redundancy）和分析冗余（Analytical Redundancy）两类。而其中硬件冗余主要是设计多传感器来尽可能明确地检测故障，可分为交叉频道监控（Cross channel monitoring, CCM）、残差生成（Residual Generation）和信号处理（Signal Processing）方法；分析冗余主要是用数学模型直接对系统当前状况进行估计，不需要多余的硬件，因此也更高效，分析冗余又可分为定性（Qualitative）方法和定量（Quantitative）方法。 Fekih\cite{6859271}认为所有故障检测都由三个步骤构成：残差生成（Residual Generation）、残差评估（Residual Evaluation）和最终判断（Decision Making）。在此基础上，诊断方法可以分为基于模型（Model-Based）的方法和不基于模型（Model-Free）的方法。其中基于模型的方法有模糊、神经网络、专家系统等方法\cite{Patan2008Artificial}，不基于模型的方法主要是基于算法和统计的手段。Yin\cite{7407616}的文献中把故障检测分为两大类——基于模型的方法和基于数据的方法。其中基于模型的方法依赖于系统模型，而当模型不准确时，可以使用纯数据方法。
+
+本文的观点与Fekih\cite{6859271}和Yin\cite{7407616}各有相似之处，认为不论基于模型还是数据，故障检测的思路都是通过设计一个残差函数来对故障进行判断，具体在残差函数的设计思路及依赖上，才有了基于模型、不基于模型或是基于数据的区别。因此，本文仍将故障检测的方法分为基于模型的方法和基于数据的方法。
+
+\subsubsection{基于模型的方法}\label{subsubsec:modelbased}
+对于基于模型的方法，文献\cite{Marzat2012modelbased}做了很好的综述。Venkatasubramanian的两篇综述\cite{Venkatasubramanian2003293,Venkatasubramanian2003A}将基于模型的故障检测分为定性方法和定量方法。通常来说，该类故障检测分为残差生成、残差评估两个环节\cite{Marzat2012modelbased}，系统框图如图\ref{fig:FDDProcess}所示。在残差生成环节，使用系统的执行器输入和传感器数据来预测系统接下来的行为；然后将预测行为与系统实际行为进行比较。这里介绍几种基于模型的方法。
+\begin{figure}[htp]
+    \centering
+    \includegraphics[width = 0.6\textwidth]{FDDProcess.png}
+    \caption{一种典型的故障检测机制}
+    \label{fig:FDDProcess}
+\end{figure}
+\paragraph{参数估计类方法}由于系统方程中的参数很可能没有直接的物理意义，而有些能测量到的物理量又不能明显地给出系统是否有错误的判断，参数估计故障诊断方法就是在这种背景下产生的。这类方法的思路是：把系统方程中的参数$\theta$与系统中具有实际物理意义但不能测量到的变量$p_a$（如舵偏角等）建立方程$\theta = g_p(p_a)$，然后首先依据系统观测方程$y=h(u,\theta)$测量到的$y$对参数$\theta$进行估计，得到$\hat{\theta}$；再通过$p_{a0} = g_p^{-1}(\hat{\theta})$求出可能的$p_{a0}$。最后将得到的$p_{a0}$输入事先设计好的残差函数，与事先设置好的可接受的$p_a$值进行比较。这是一种比较经典的方法，文献多在2000年以前出现\cite{ISERMANN1984387,FRANK1990459,ISERMANN1993815,411478,BLOCH19951709}，其中对参数$\hat{\theta}$的辨识也成为了新的研究方向\cite{ISERMANN1993815,411478,BLOCH19951709}，涉及到的方法多为最小二乘、卡尔曼滤波等一些最优估计的方法。参数估计的计算强度较大是这类方法的缺点，文献\cite{Villemonteix2009Bayesian}对参数估计提出了一种贝叶斯（Bayesian）优化方法。在残差函数的设计中，也可以设置多个可接受的$p_a$值的集合，详见文献\cite{Kieffer2011Guaranteed,Puig2010Fault}。
+
+\paragraph{状态估计类方法}状态估计类方法的思路是通过对系统状态的估计与传感器测量的数据做对比，得到系统是否发生错误的判决。通常可以根据对不确定性的处理分为确定性方法、随机方法和有界误差方法\cite{Marzat2012modelbased}。
+
+确定性方法\cite{1098323,ALCORTAGARCIA1997663}不考虑系统的误差和扰动，直接在模型中推导观测误差与错误的关系。Luenberger观测器\cite{1098323}是这种方法第一次被应用到线性系统上。由于非线性系统线性化的时候会产生误差，因此又有了处理非线性系统的扩展Luenberger观测器（Extended
+Luenberger Observer, ELO）\cite{Nejjari2008Extended,ZEITZ1987149}。此外，由于非线性系统的复杂性，也有很多种观测器得到了研究，如自适应观测器（Adaptive observers）\cite{878691,Zhang2010290}、高增益观测器（High-gain observers）\cite{Busvelle2002HIGH}、滑模观测器（Sliding Mode Observers）\cite{Edwards2011Sliding,1269645}和基于偏微分方程（partial-differential equation）设计的新型观测器\cite{5717995}。
+
+随机方法中，通常假定系统的噪声扰动服从高斯分布（Gaussian Distribution），在处理线性系统时以卡尔曼滤波器（Kalman Filter）为代表。基于卡尔曼滤波器的容错方法首先在文献\cite{MEHRA1971637}中提到，而后\cite{NIKOUKHAH19941851,539440,willsky1986detection}做了后续延伸工作。处理非线性系统时，有扩展卡尔曼滤波（Extended Kalman Filter, EKF）、无迹卡尔曼滤波（Unscented Kalman Filter, UKF）和粒子滤波（Particle Filter, PF）。扩展卡尔曼滤波通过对非线性系统线性化来使用卡尔曼滤波\cite{CHANG19952861}；无迹卡尔曼滤波则不对系统线性化，通过一些系统状态采样点来逼近系统状态的高斯分布\cite{4252507,XIONG2005113}。粒子滤波则可适用于非线性非高斯分布的噪声，它采用蒙特卡洛方法对错误进行建模并估计\cite{1271398,971661}。
+
+有界误差方法不同与上面两种。上面两种都使用了显示的故障模型或概率分布，而有界误差方法使用故障的上界进行处理。这类方法的文献如区间分析法\cite{4547434}和神经-模糊方法\cite{Korbicz2007609}。
+
+\paragraph{奇偶校验空间法}奇偶空间校验（Parity Space）方法比较容易从直观上理解，是一种解除系统状态和错误之间的耦合，从而方便设计出只跟故障有关的残差函数\cite{patton1991review,GERTLER1995627}。具体来说，对于一个静态线性观测系统：
+\begin{equation*}
+    \mathbf{y} = \mathbf{Cx} + \mathbf{E_fw_f}
+\end{equation*}
+其中$\mathbf{w_f}$是系统错误，$\mathbf{y}$是观测变量。此时如果设计一个矩阵$\mathbf{W}$，使得$\mathbf{WC=0}$，那么残差函数$\mathbf{Wy}$就只与系统错误$\mathbf{w_f}$有关了，可以依次设计残差函数。对于动态系统，可以用\cite{Marzat2012modelbased}中提及的方法先把系统化成静态系统的形式。对于非线性系统，则可以用线性化、仿射变换等方式来处理，详见文献\cite{Staroswiecki2001687,shumsky2007redundancy,1024022,948476}。
+
+\paragraph{去耦合类方法}在故障检测设计残差函数时，经常遇到的一个问题是如何区分系统的正常扰动和意外故障。一个理想的残差函数应该满足：1)只对系统错误有响应，对系统状态和扰动无响应；2)在系统没有故障的时候，能够随着时间的推移收敛到0\cite{1104419}。这里介绍四种去耦合类的方法。
+
+第一种是特征结构分配的方法\cite{261546}。该方法给系统的输出估计偏差$\mathbf{e_y}$左乘了一个权值矩阵$\mathbf{W}$作为残差函数\cite{261546,RNC:RNC523}。同样的方法也可以用在奇偶校验空间的残差设计中，使得残差对系统扰动不敏感\cite{doi:10.1080/00207179508921908}。
+
+第二种是未知输入观测器（Unknown-input Observer, UIO）。这种观测器能够在估计系统状态的同时将外部扰动的影响降到最小\cite{jie1996design,1657536,220921}。简单将未知输入观测器的原理说明如下，假设系统如\eqref{eq:UIO1}所示。
+\begin{equation}\label{eq:UIO1}
+\begin{cases}
+\dot{x} = Ax+Bu+E_dw_d+E_fw_f \\
+y = Cx 
+\end{cases}
+\end{equation}
+其中$w_d$代表扰动，$w_f$代表错误。针对该系统的位置输入观测器设计如\eqref{eq:UIO2}所示
+\begin{equation}\label{eq:UIO2}
+\begin{cases}
+\dot{\hat{x}}=F\hat{x}+TBu+(K_1+K_2)y \\
+\mathbf{r} = (I-CH)y-C\hat{x}
+\end{cases}
+\end{equation}
+其中，$\mathbf{r}$为残差函数，$F,T,K_1,K_2,H$都是设计参数，需满足以下条件：
+\begin{equation*}
+\begin{cases}
+(HC-I)E_d=0\\
+T = I - HC\\
+F= I-HCA-K_1C\\
+K_2=FH
+\end{cases}
+\end{equation*}
+只要这样的观测器存在，那么可以用\cite{4101989}中提及的DOS（Dedicated observer scheme）或者GOS（General observer scheme）的方法进行故障检测系统设计。
+
+第三类方法是$H_{\infty}$方法。这种策略适合精确解耦无法达到的情况\cite{doi:10.1080/002071799220704,Henry2005251}。$H_{\infty}$方法的思想是，根据$H_{\infty}$范数设计残差函数，使得错误对其影响最大，并且扰动对其影响最小。运用线性矩阵不等式（Linear Matrix Inequality, LMI）是解决这类问题的标准化方法\cite{Zhong2003543}。
+
+第四类是非线性几何方法。微分几何的方法\cite{928586,Bokor2009113}能够检测是否存在一个只对一种错误敏感的滤波器\cite{Marzat2012modelbased}。微分代数的方法也有文献，如\cite{berdjag:hal-00198435}。此外，还有一种逆向的方法\cite{edelmayer2004input,doi:10.1080/00207170802582215,1102181}。该种方法不同于大多数故障检测方法。大多数故障检测系统都使用估计系统输出与测量到的系统输出作比较或设计残差函数，这种逆向方法使用系统输入与前一时段发送给系统执行器的输入作比较。由于大多数飞行器都装备了惯性测量元件（Inertia Measurement Unit, IMU），针对利用惯性测量元件的故障检测也有相关文献\cite{MARZAT2010951,5676073}。
+
+\paragraph{闭环方法}前面介绍的几种故障检测方法都是未考虑反馈控制的开环检测方法。但事实上控制信息能极大地辅助故障检测。比如设计一个辅助控制器添加到系统本身的输入中\cite{NIEMANN2006587,ASHARI2009192}。文献\cite{ASHARI2009192,4602147}将这种方法应用到无人机上，通过添加一个微小的正弦控制量的方法进行故障检测。但是这种方法需要非常小心，需要保证添加的控制量不会严重干扰系统的稳定性和表现\cite{Niemann2006Active}。
+
+鉴于以上原因，闭环方法需要在控制表现和故障检测能力中做取舍。Jacobson\cite{92987}设计了同时能够控制和故障检测的模型。 相关的多目标优化问题也成为了研究的热点。Henry\cite{Henry2005251}提出了一种对这类问题的建模，并用线性矩阵不等式得到了问题的最优解。Niemann\cite{649678}对闭环故障检测方法的效果与开环方法做了对比。
+
+\subsubsection{基于数据的方法}\label{subsubsec:databased}
+基于数据的方法又可以称为不依靠模型的（Model-Free）方法。Yin在基于数据的方法有较多的研究文献\cite{6717991,7394158,7067026,6748057,7297846,7407616}。其中文献\cite{6717991,6748057,7407616}提供了基于数据的故障诊断的文献综述。基于数据的方法特点是，容错控制器的设计完全不考虑
+
 \subsection{主动容错控制}\label{subsec:active}
 主动容错控制的思想是通过在线辨识系统控制设备的状态，估计控制器的错误类型，并针对已发生的错误种类，实时生成能够让系统继续保持稳定的控制器。主动容错控制系统一般分为两个步骤：故障检测以及控制器生成。故障检测又可分为两大类——基于模型和不基于模型的；控制器生成可以分为三大类——控制器池法，控制分配方法
 
